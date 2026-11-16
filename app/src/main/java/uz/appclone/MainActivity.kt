@@ -1,6 +1,7 @@
 package uz.appclone
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -8,51 +9,41 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.view.Gravity
 import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
-import android.app.Activity
+import android.widget.Toast
 
 class MainActivity : Activity() {
 
     private lateinit var status: TextView
+    private lateinit var btnGoogle: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(48, 48, 48, 48)
+        status = findViewById(R.id.status)
+        btnGoogle = findViewById(R.id.btnGoogle)
+
+        findViewById<Button>(R.id.btnPermission).setOnClickListener { requestAccess() }
+        btnGoogle.setOnClickListener {
+            if (hasAllFilesAccess()) {
+                Toast.makeText(this, "Google bilan kirish keyingi qadamda ulanadi", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Avval ruxsat bering", Toast.LENGTH_SHORT).show()
+            }
         }
-        val title = TextView(this).apply {
-            text = "App Clone"
-            textSize = 28f
-            gravity = Gravity.CENTER
-        }
-        status = TextView(this).apply {
-            textSize = 16f
-            gravity = Gravity.CENTER
-            setPadding(0, 32, 0, 32)
-        }
-        val button = Button(this).apply {
-            text = "Ruxsat berish"
-            setOnClickListener { requestAccess() }
-        }
-        root.addView(title)
-        root.addView(status)
-        root.addView(button)
-        setContentView(root)
     }
 
     override fun onResume() {
         super.onResume()
-        status.text = if (hasAllFilesAccess()) {
-            "Ruxsat berilgan. Keyingi qadam: Google bilan kirish."
+        val ok = hasAllFilesAccess()
+        status.text = if (ok) {
+            "Ruxsat berilgan. Endi Google akkaunt bilan kiring."
         } else {
             "Ilova ishlashi uchun barcha fayllarga ruxsat kerak."
         }
+        btnGoogle.alpha = if (ok) 1f else 0.5f
     }
 
     private fun hasAllFilesAccess(): Boolean =
@@ -65,11 +56,12 @@ class MainActivity : Activity() {
 
     private fun requestAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                Uri.parse("package:$packageName")
+            startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
             )
-            startActivity(intent)
         } else {
             requestPermissions(
                 arrayOf(
