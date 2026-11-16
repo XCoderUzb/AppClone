@@ -19,7 +19,7 @@
     <application
         android:allowBackup="false"
         android:label="App Clone"
-        android:theme="@style/AppTheme">
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name=".MainActivity"
             android:exported="true">
