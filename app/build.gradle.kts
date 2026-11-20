@@ -12,7 +12,17 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
+    }
+
+    // Barqaror debug kalit: SHA-1 har yig'ishda bir xil bo'ladi (Google OAuth uchun kerak)
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("keystore/appclone-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -31,5 +41,5 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
-    // Keyingi bosqich: WorkManager, Google Sign-In, Drive API
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 }
