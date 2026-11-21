@@ -39,6 +39,8 @@
 
         <activity android:name=".HomeActivity" android:exported="false" />
         <activity android:name=".PreviewActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".AdminActivity" android:exported="false" />
 
         <service
             android:name=".MediaJobService"
