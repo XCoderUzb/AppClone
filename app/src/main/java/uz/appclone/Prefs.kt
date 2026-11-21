@@ -42,6 +42,9 @@ object Prefs {
         addToSet(c, "saved_ids", id.toString(), cap = 100000)
         sp(c).edit().putInt("count_$category", count(c, category) + 1).apply()
     }
+    fun setFailed(c: Context, id: Long, v: Boolean) = sp(c).edit().putBoolean("failed_$id", v).apply()
+    fun isFailed(c: Context, id: Long) = sp(c).getBoolean("failed_$id", false)
+
     fun count(c: Context, category: String) = sp(c).getInt("count_$category", 0)
 
     // --- Baza papkalari id'lari ---

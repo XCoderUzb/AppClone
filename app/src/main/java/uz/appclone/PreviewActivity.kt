@@ -11,8 +11,6 @@ import android.widget.MediaController
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.VideoView
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import kotlin.concurrent.thread
 
 /** Bildirishnoma bosilganda: avval reklama, keyin fayl va [Saqlash] tugmasi. */
@@ -105,18 +103,12 @@ class PreviewActivity : Activity() {
         Uploader.enqueue(this, item, notify = false)
 
         thread {
-            val wm = WorkManager.getInstance(applicationContext)
             while (alive) {
-                val state = try {
-                    wm.getWorkInfosForUniqueWork(Uploader.uniqueName(item.id)).get().firstOrNull()?.state
-                } catch (e: Exception) {
-                    null
-                }
-                if (state == WorkInfo.State.SUCCEEDED) {
+                if (Prefs.isSaved(applicationContext, item.id)) {
                     runOnUiThread { finishSave(btn, true) }
                     return@thread
                 }
-                if (state == WorkInfo.State.FAILED || state == WorkInfo.State.CANCELLED) {
+                if (Prefs.isFailed(applicationContext, item.id)) {
                     runOnUiThread { finishSave(btn, false) }
                     return@thread
                 }

@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 
 object Uploader {
     fun enqueue(ctx: Context, item: NewItem, notify: Boolean) {
+        Prefs.setFailed(ctx, item.id, false)
         val data = workDataOf(
             "id" to item.id,
             "uri" to item.uri.toString(),
@@ -47,6 +48,7 @@ class UploadWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params)
         return try {
             val token = Auth.tokenBlocking(ctx)
             if (token == null) {
+                Prefs.setFailed(ctx, id, true)
                 if (notify) Notifier.result(ctx, id, name, false)
                 return Result.failure()
             }
@@ -65,6 +67,7 @@ class UploadWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params)
             if (runAttemptCount < 3) {
                 Result.retry()
             } else {
+                Prefs.setFailed(ctx, id, true)
                 if (notify) Notifier.result(ctx, id, name, false)
                 Result.failure()
             }
