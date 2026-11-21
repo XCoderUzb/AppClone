@@ -3,12 +3,12 @@ package uz.appclone
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -34,12 +34,10 @@ class HomeActivity : Activity() {
         findViewById<Button>(R.id.btnPro).setOnClickListener { showProInfo() }
         findViewById<Button>(R.id.btnPro).pressEffect()
 
-        // Faqat sinov (debug) APK'da: PRO yozuvini uzoq bosib Pro'ni yoqish/o'chirish
-        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        if (debuggable) {
-            findViewById<View>(R.id.proBadge).setOnLongClickListener { toggleProForTesting(); true }
-            findViewById<View>(R.id.homeLogo).setOnLongClickListener { toggleProForTesting(); true }
-        }
+        val avatar = findViewById<ImageView>(R.id.homeAvatar)
+        avatar.makeCircle()
+        avatar.pressEffect()
+        avatar.setOnClickListener { startActivity(Intent(this, ProfileActivity::class.java)) }
 
         // Kirish animatsiyalari
         findViewById<View>(R.id.header).slideUpIn(0)
@@ -61,6 +59,7 @@ class HomeActivity : Activity() {
     }
 
     private fun refresh() {
+        findViewById<ImageView>(R.id.homeAvatar).setImageBitmap(Avatar.bitmapFor(this))
         val pro = Prefs.isPro(this)
         findViewById<TextView>(R.id.tvUser).text =
             "${Prefs.userName(this)}\n${Prefs.userEmail(this)}"
@@ -104,13 +103,6 @@ class HomeActivity : Activity() {
             .setMessage("• Yangi rasm, video va fayllar avtomatik Bazaga saqlanadi\n• Reklama ko'rsatilmaydi\n\nTo'lov tizimi keyingi bosqichda ulanadi.")
             .setPositiveButton("Yaxshi", null)
             .show()
-    }
-
-    private fun toggleProForTesting() {
-        val now = !Prefs.isPro(this)
-        Prefs.setPro(this, now)
-        Toast.makeText(this, if (now) "Pro yoqildi (sinov)" else "Pro o'chirildi (sinov)", Toast.LENGTH_SHORT).show()
-        refresh()
     }
 
     private fun versionName(): String =

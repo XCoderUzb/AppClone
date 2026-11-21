@@ -127,7 +127,8 @@ class PreviewActivity : Activity() {
         } else {
             btn.text = "Qayta urinish"
             btn.isEnabled = true
-            findViewById<TextView>(R.id.tvStatus).text = "Saqlab bo'lmadi. Internetni tekshiring."
+            findViewById<TextView>(R.id.tvStatus).text =
+                Prefs.failReason(this, item.id) ?: "Saqlab bo'lmadi. Internetni tekshiring."
             btn.setOnClickListener { save(btn) }
         }
     }

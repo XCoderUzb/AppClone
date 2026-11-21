@@ -57,7 +57,17 @@ class UploadWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params)
             val sub = Prefs.folderId(ctx, cat)
                 ?: DriveApi.ensureFolder(token, cat, root).also { Prefs.setFolderId(ctx, cat, it) }
 
+            val size = DriveApi.sizeOf(ctx, uri)
+            if (size >= 0 && Prefs.usedBytes(ctx) + size > Limits.APP_BYTES) {
+                // Baza to'lgan: qayta urinishning foydasi yo'q
+                Prefs.setFailReason(ctx, id, "Baza to'lgan (5 GB). Joy bo'shating.")
+                Prefs.setFailed(ctx, id, true)
+                if (notify) Notifier.result(ctx, id, name, false, "Baza to'lgan (5 GB)")
+                return Result.failure()
+            }
+
             DriveApi.upload(ctx, token, uri, name, mime, sub)
+            if (size > 0) Prefs.addUsedBytes(ctx, size)
             Prefs.addSaved(ctx, cat, id)
             if (notify) Notifier.result(ctx, id, name, true)
             Result.success()

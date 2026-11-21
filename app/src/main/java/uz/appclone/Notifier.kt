@@ -88,13 +88,13 @@ object Notifier {
         ctx.getSystemService(NotificationManager::class.java).notify(nid(id), n)
     }
 
-    fun result(ctx: Context, id: Long, name: String, ok: Boolean) {
+    fun result(ctx: Context, id: Long, name: String, ok: Boolean, reason: String? = null) {
         ensureChannel(ctx)
         val n = Notification.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setColor(0xFFF47B20.toInt())
             .setContentTitle(if (ok) "Bazaga saqlandi ✓" else "Saqlab bo'lmadi")
-            .setContentText(if (ok) name else "Internetni tekshiring yoki ilovaga qayta kiring")
+            .setContentText(if (ok) name else (reason ?: "Internetni tekshiring yoki ilovaga qayta kiring"))
             .setTimeoutAfter(6000)
             .setAutoCancel(true)
             .build()

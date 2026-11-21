@@ -113,6 +113,10 @@ class MainActivity : Activity() {
                 val root = DriveApi.ensureFolder(token, "App Clone")
                 Prefs.setFolderId(this, "root", root)
                 Prefs.setSignedIn(this, user.name, user.email)
+                if (user.photo.isNotEmpty()) {
+                    Prefs.setPhotoUrl(this, user.photo)
+                    Avatar.fetch(this, user.photo)
+                }
                 if (Prefs.lastScan(this) < 0) Prefs.setLastScan(this, System.currentTimeMillis() / 1000)
                 runOnUiThread { goHome() }
             } catch (e: Exception) {

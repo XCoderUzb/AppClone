@@ -30,6 +30,10 @@ class MediaJobService : JobService() {
     companion object {
         private const val JOB_ID = 4201
 
+        fun cancel(ctx: Context) {
+            ctx.getSystemService(JobScheduler::class.java).cancel(JOB_ID)
+        }
+
         fun schedule(ctx: Context) {
             val js = ctx.getSystemService(JobScheduler::class.java)
             val info = JobInfo.Builder(JOB_ID, ComponentName(ctx, MediaJobService::class.java))

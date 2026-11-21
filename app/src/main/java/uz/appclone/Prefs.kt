@@ -56,4 +56,30 @@ object Prefs {
         sp(c).all.keys.filter { it.startsWith("folder_") }.forEach { e.remove(it) }
         e.apply()
     }
+
+    // --- Profil / Baza hajmi ---
+    fun usedBytes(c: Context) = sp(c).getLong("used_bytes", 0L)
+    fun setUsedBytes(c: Context, v: Long) = sp(c).edit().putLong("used_bytes", v).apply()
+    fun addUsedBytes(c: Context, v: Long) = setUsedBytes(c, usedBytes(c) + v)
+    fun photoUrl(c: Context) = sp(c).getString("photo_url", "") ?: ""
+    fun setPhotoUrl(c: Context, v: String) = sp(c).edit().putString("photo_url", v).apply()
+
+    fun failReason(c: Context, id: Long): String? = sp(c).getString("fail_reason_$id", null)
+    fun setFailReason(c: Context, id: Long, v: String?) =
+        sp(c).edit().putString("fail_reason_$id", v).apply()
+
+    // --- Admin ---
+    fun adminFails(c: Context) = sp(c).getInt("admin_fails", 0)
+    fun setAdminFails(c: Context, v: Int) = sp(c).edit().putInt("admin_fails", v).apply()
+    fun adminLockUntil(c: Context) = sp(c).getLong("admin_lock_until", 0L)
+    fun setAdminLockUntil(c: Context, v: Long) = sp(c).edit().putLong("admin_lock_until", v).apply()
+
+    /** Akkauntdan chiqish: kirish ma'lumotlarini tozalaydi. */
+    fun signOut(c: Context) {
+        val e = sp(c).edit()
+        listOf("signed_in", "user_name", "user_email", "photo_url", "last_scan", "used_bytes")
+            .forEach { e.remove(it) }
+        sp(c).all.keys.filter { it.startsWith("folder_") }.forEach { e.remove(it) }
+        e.apply()
+    }
 }

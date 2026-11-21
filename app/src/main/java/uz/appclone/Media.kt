@@ -45,3 +45,8 @@ fun formatSize(bytes: Long): String = when {
     bytes < 1024L * 1024 * 1024 -> String.format("%.1f MB", bytes / 1048576.0)
     else -> String.format("%.2f GB", bytes / 1073741824.0)
 }
+
+object Limits {
+    /** Har bir foydalanuvchi uchun Baza hajmi (hozircha hamma uchun 5 GB). */
+    const val APP_BYTES = 5L * 1024 * 1024 * 1024
+}
