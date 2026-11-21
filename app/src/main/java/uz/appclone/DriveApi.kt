@@ -12,6 +12,15 @@ import java.net.URLEncoder
 /** Baza (Google Drive v3) bilan ishlash. Faqat orqa oqimda chaqiring. */
 object DriveApi {
 
+    data class DriveFile(
+        val id: String,
+        val name: String,
+        val mime: String,
+        val size: Long,
+        val created: String,
+        val thumb: String?
+    )
+
     data class User(val name: String, val email: String, val photo: String = "")
 
     private const val BASE = "https://www.googleapis.com/drive/v3"
@@ -27,7 +36,12 @@ object DriveApi {
 
     private fun request(method: String, url: String, token: String, body: String? = null): JSONObject {
         val c = URL(url).openConnection() as HttpURLConnection
-        c.requestMethod = method
+        if (method == "PATCH") {
+            c.requestMethod = "POST"
+            c.setRequestProperty("X-HTTP-Method-Override", "PATCH")
+        } else {
+            c.requestMethod = method
+        }
         c.connectTimeout = 15000
         c.readTimeout = 30000
         c.setRequestProperty("Authorization", "Bearer $token")
@@ -59,6 +73,51 @@ object DriveApi {
             .put("mimeType", "application/vnd.google-apps.folder")
         if (parentId != null) body.put("parents", JSONArray().put(parentId))
         return request("POST", "$BASE/files?fields=id", token, body.toString()).getString("id")
+    }
+
+    /** Kategoriya papkasining id'si (yo'q bo'lsa yaratadi). */
+    fun categoryFolder(ctx: Context, token: String, cat: String): String {
+        val root = Prefs.folderId(ctx, "root")
+            ?: ensureFolder(token, "App Clone").also { Prefs.setFolderId(ctx, "root", it) }
+        return Prefs.folderId(ctx, cat)
+            ?: ensureFolder(token, cat, root).also { Prefs.setFolderId(ctx, cat, it) }
+    }
+
+    /** Papkadagi fayllar, yangilari birinchi. */
+    fun listFiles(token: String, folderId: String): List<DriveFile> {
+        val out = mutableListOf<DriveFile>()
+        var page: String? = null
+        val q = URLEncoder.encode(
+            "'$folderId' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder'",
+            "UTF-8"
+        )
+        do {
+            var url = "$BASE/files?q=$q&fields=nextPageToken,files(id,name,mimeType,size,createdTime,thumbnailLink)" +
+                "&orderBy=createdTime%20desc&pageSize=200"
+            if (page != null) url += "&pageToken=" + URLEncoder.encode(page, "UTF-8")
+            val json = request("GET", url, token)
+            val arr = json.getJSONArray("files")
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                out.add(
+                    DriveFile(
+                        o.getString("id"),
+                        o.optString("name"),
+                        o.optString("mimeType"),
+                        o.optString("size", "0").toLongOrNull() ?: 0L,
+                        o.optString("createdTime"),
+                        o.optString("thumbnailLink").takeIf { it.isNotEmpty() }
+                    )
+                )
+            }
+            page = if (json.has("nextPageToken")) json.getString("nextPageToken") else null
+        } while (page != null && out.size < 1000)
+        return out
+    }
+
+    /** Faylni Bazaning axlat qutisiga tashlaydi (30 kun ichida tiklash mumkin). */
+    fun trash(token: String, fileId: String) {
+        request("PATCH", "$BASE/files/$fileId?fields=id", token, "{\"trashed\":true}")
     }
 
     fun sizeOf(ctx: Context, uri: Uri): Long =

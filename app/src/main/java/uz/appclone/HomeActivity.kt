@@ -31,8 +31,13 @@ class HomeActivity : Activity() {
         findViewById<TextView>(R.id.tvVersion).text = "Versiya ${versionName()}"
 
         buildCategories()
+        Updater.check(this, false)
         findViewById<Button>(R.id.btnPro).setOnClickListener { showProInfo() }
         findViewById<Button>(R.id.btnPro).pressEffect()
+        findViewById<Button>(R.id.btnAdmin).apply {
+            pressEffect()
+            setOnClickListener { startActivity(Intent(this@HomeActivity, AdminActivity::class.java)) }
+        }
 
         val avatar = findViewById<ImageView>(R.id.homeAvatar)
         avatar.makeCircle()
@@ -56,10 +61,18 @@ class HomeActivity : Activity() {
             return
         }
         refresh()
+
+        // Admin akkaunt bilan yangi kirilgan bo'lsa, panel o'zi ochiladi (bir marta)
+        if (Prefs.adminAutoOpen(this) && Admin.isAdminAccount(this)) {
+            Prefs.setAdminAutoOpen(this, false)
+            startActivity(Intent(this, AdminActivity::class.java))
+        }
     }
 
     private fun refresh() {
         findViewById<ImageView>(R.id.homeAvatar).setImageBitmap(Avatar.bitmapFor(this))
+        findViewById<View>(R.id.btnAdmin).visibility =
+            if (Admin.isAdminAccount(this)) View.VISIBLE else View.GONE
         val pro = Prefs.isPro(this)
         findViewById<TextView>(R.id.tvUser).text =
             "${Prefs.userName(this)}\n${Prefs.userEmail(this)}"
@@ -91,7 +104,11 @@ class HomeActivity : Activity() {
             counters[cat] = card.findViewById(R.id.catCount)
             card.pressEffect()
             card.setOnClickListener {
-                Toast.makeText(this, "$cat ro'yxati keyingi qadamda qo'shiladi", Toast.LENGTH_SHORT).show()
+                if (cat == Cat.APPS) {
+                    Toast.makeText(this, "Ilovalar bo'limi tez orada", Toast.LENGTH_SHORT).show()
+                } else {
+                    startActivity(Intent(this, CategoryActivity::class.java).putExtra("cat", cat))
+                }
             }
             row.addView(card)
         }

@@ -113,6 +113,7 @@ class MainActivity : Activity() {
                 val root = DriveApi.ensureFolder(token, "App Clone")
                 Prefs.setFolderId(this, "root", root)
                 Prefs.setSignedIn(this, user.name, user.email)
+                Prefs.setAdminAutoOpen(this, Admin.isAdminEmail(user.email))
                 if (user.photo.isNotEmpty()) {
                     Prefs.setPhotoUrl(this, user.photo)
                     Avatar.fetch(this, user.photo)

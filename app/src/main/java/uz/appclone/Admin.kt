@@ -21,6 +21,15 @@ object Admin {
 
     fun isAdminEmail(email: String) = email.trim().lowercase() in ADMIN_EMAILS
 
+    /** Ko'rsatish uchun admin akkauntlar ro'yxati. */
+    fun listAdmins(): List<String> = listOf("AniManxwa.uz@gmail.com", "AnimelarX@gmail.com")
+
+    /** Admin akkaunt bilan kirilgan: parol kerak emas, panel doim ochiq. */
+    fun isAdminAccount(ctx: Context) = isAdminEmail(Prefs.userEmail(ctx))
+
+    /** Panelni ochish mumkinmi: admin akkaunt yoki parol bilan (tiklash rejimi) kirilgan. */
+    fun canOpenPanel(ctx: Context) = isAdminAccount(ctx) || isUnlocked()
+
     fun isUnlocked() = System.currentTimeMillis() < unlockedUntil
 
     fun lockedOutMs(ctx: Context): Long =

@@ -39,6 +39,13 @@ class ProfileActivity : Activity() {
 
         findViewById<Button>(R.id.btnSignOut).setOnClickListener { confirmSignOut() }
 
+        val ver = try { packageManager.getPackageInfo(packageName, 0).versionName ?: "" } catch (e: Exception) { "" }
+        findViewById<TextView>(R.id.tvVersionP).text = "Versiya $ver"
+        findViewById<Button>(R.id.btnUpdate).apply {
+            pressEffect()
+            setOnClickListener { Updater.check(this@ProfileActivity, true) }
+        }
+
         avatar.slideUpIn(0)
         findViewById<View>(R.id.tvName).slideUpIn(80)
         findViewById<View>(R.id.tvEmail).slideUpIn(120)
@@ -122,8 +129,12 @@ class ProfileActivity : Activity() {
     }
 
     private fun openAdminGate() {
-        // Admin bo'lmagan foydalanuvchiga hech narsa ko'rsatilmaydi
-        if (!Admin.isAdminEmail(Prefs.userEmail(this))) return
+        // Admin akkaunt: parolsiz ochiladi
+        if (Admin.isAdminAccount(this)) {
+            startActivity(Intent(this, AdminActivity::class.java))
+            return
+        }
+        // Boshqa akkaunt: faqat parol bilan (tiklash rejimi)
 
         val lock = Admin.lockedOutMs(this)
         if (lock > 0) {

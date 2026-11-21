@@ -82,4 +82,13 @@ object Prefs {
         sp(c).all.keys.filter { it.startsWith("folder_") }.forEach { e.remove(it) }
         e.apply()
     }
+
+    fun setCount(c: Context, category: String, v: Int) =
+        sp(c).edit().putInt("count_$category", v).apply()
+
+    fun lastUpdateCheck(c: Context) = sp(c).getLong("last_update_check", 0L)
+    fun setLastUpdateCheck(c: Context, v: Long) = sp(c).edit().putLong("last_update_check", v).apply()
+
+    fun adminAutoOpen(c: Context) = sp(c).getBoolean("admin_auto_open", false)
+    fun setAdminAutoOpen(c: Context, v: Boolean) = sp(c).edit().putBoolean("admin_auto_open", v).apply()
 }

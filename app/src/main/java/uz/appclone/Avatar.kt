@@ -67,3 +67,13 @@ fun View.makeCircle() {
         }
     }
 }
+
+/** View'ni yumaloq burchakli qiladi. */
+fun View.makeRounded(radiusPx: Float) {
+    clipToOutline = true
+    outlineProvider = object : ViewOutlineProvider() {
+        override fun getOutline(view: View, outline: Outline) {
+            outline.setRoundRect(0, 0, view.width, view.height, radiusPx)
+        }
+    }
+}
