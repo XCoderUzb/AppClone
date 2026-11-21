@@ -1,0 +1,8 @@
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+# Release kalitlarini hech qachon repoga qo'shmang
+release*.jks
+release*.keystore
