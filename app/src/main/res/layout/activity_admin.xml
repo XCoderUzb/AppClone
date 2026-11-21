@@ -42,10 +42,42 @@
             android:textSize="14sp" />
 
         <LinearLayout
-            android:id="@+id/swCard"
+            android:id="@+id/cardAdmins"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
+            android:background="@drawable/card_cat"
+            android:elevation="4dp"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                style="@style/TextCardTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="👑 Admin akkauntlar" />
+
+            <TextView
+                android:id="@+id/tvAdminList"
+                style="@style/TextCardBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="14sp" />
+
+            <TextView
+                style="@style/TextCardBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Akkauntni olib tashlash: bosing (server ulangandan keyin ishlaydi)" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/swCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:background="@drawable/card_cat"
             android:elevation="4dp"
             android:gravity="center_vertical"
