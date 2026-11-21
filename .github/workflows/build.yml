@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,3 +31,11 @@ jobs:
         with:
           name: AppClone-debug
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Release (yangi versiya)
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: App Clone 1.0.${{ github.run_number }}
+          files: app/build/outputs/apk/debug/app-debug.apk
