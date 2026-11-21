@@ -1,42 +1,44 @@
 package uz.appclone
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.Scope
 import kotlin.concurrent.thread
 
 class MainActivity : Activity() {
 
     private lateinit var status: TextView
     private lateinit var btnGoogle: Button
-    private var signedIn = false
 
     private val reqAuth = 1001
-    private val driveScope = Scope("https://www.googleapis.com/auth/drive.file")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
+        // Allaqachon kirilgan bo'lsa, to'g'ridan-to'g'ri bosh ekranga
+        if (Prefs.isSignedIn(this) && Perms.hasAllFiles(this)) {
+            goHome()
+            return
+        }
+
+        setContentView(R.layout.activity_main)
         status = findViewById(R.id.status)
         btnGoogle = findViewById(R.id.btnGoogle)
 
-        findViewById<Button>(R.id.btnPermission).setOnClickListener { requestAccess() }
+        val btnPerm = findViewById<Button>(R.id.btnPermission)
+        btnPerm.setOnClickListener { requestAccess() }
+        btnPerm.pressEffect()
+        btnGoogle.pressEffect()
         btnGoogle.setOnClickListener {
-            if (!hasAllFilesAccess()) {
+            if (!Perms.hasAllFiles(this)) {
                 Toast.makeText(this, "Avval ruxsat bering", Toast.LENGTH_SHORT).show()
             } else {
                 signInWithGoogle()
@@ -46,8 +48,12 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        if (signedIn) return
-        val ok = hasAllFilesAccess()
+        if (!::status.isInitialized) return
+        if (Prefs.isSignedIn(this) && Perms.hasAllFiles(this)) {
+            goHome()
+            return
+        }
+        val ok = Perms.hasAllFiles(this)
         status.text = if (ok) {
             "Ruxsat berilgan. Endi Google akkaunt bilan kiring."
         } else {
@@ -56,26 +62,26 @@ class MainActivity : Activity() {
         btnGoogle.alpha = if (ok) 1f else 0.5f
     }
 
-    // ---- Google bilan kirish + Drive ruxsati ----
+    private fun goHome() {
+        startActivity(Intent(this, HomeActivity::class.java))
+        finish()
+    }
+
+    // ---- Google bilan kirish + Baza ruxsati ----
 
     private fun signInWithGoogle() {
         status.text = "Google bilan bog'lanilmoqda..."
-        val request = AuthorizationRequest.builder()
-            .setRequestedScopes(listOf(driveScope))
-            .build()
-
         Identity.getAuthorizationClient(this)
-            .authorize(request)
+            .authorize(Auth.request())
             .addOnSuccessListener { result ->
                 val pending = result.pendingIntent
                 if (result.hasResolution() && pending != null) {
-                    // Foydalanuvchi akkaunt tanlaydi va Drive ruxsatini beradi
                     startIntentSenderForResult(pending.intentSender, reqAuth, null, 0, 0, 0)
                 } else {
                     onAuthorized(result.accessToken)
                 }
             }
-            .addOnFailureListener { showError("Kirishda xato: ${it.message}") }
+            .addOnFailureListener { status.text = "Kirishda xato: ${it.message}" }
     }
 
     @Deprecated("Oddiy Activity uchun")
@@ -88,48 +94,34 @@ class MainActivity : Activity() {
                     .getAuthorizationResultFromIntent(data)
                 onAuthorized(result.accessToken)
             } catch (e: ApiException) {
-                showError("Kirishda xato: ${e.message}")
+                status.text = "Kirishda xato: ${e.message}"
             }
         } else {
-            showError("Kirish bekor qilindi")
+            status.text = "Kirish bekor qilindi"
         }
     }
 
     private fun onAuthorized(token: String?) {
         if (token == null) {
-            showError("Google token olinmadi")
+            status.text = "Google token olinmadi"
             return
         }
-        status.text = "Drive tekshirilmoqda..."
+        status.text = "Baza tekshirilmoqda..."
         thread {
             try {
                 val user = DriveApi.getUser(token)
-                DriveApi.ensureFolder(token, "App Clone")
-                runOnUiThread {
-                    signedIn = true
-                    status.text = "Salom, ${user.name}\n${user.email}\n\nGoogle Drive ulandi ✓"
-                    btnGoogle.text = "Ulangan ✓"
-                    btnGoogle.alpha = 1f
-                }
+                val root = DriveApi.ensureFolder(token, "App Clone")
+                Prefs.setFolderId(this, "root", root)
+                Prefs.setSignedIn(this, user.name, user.email)
+                if (Prefs.lastScan(this) < 0) Prefs.setLastScan(this, System.currentTimeMillis() / 1000)
+                runOnUiThread { goHome() }
             } catch (e: Exception) {
-                runOnUiThread { showError(e.message ?: "Noma'lum xato") }
+                runOnUiThread { status.text = e.message ?: "Noma'lum xato" }
             }
         }
     }
 
-    private fun showError(msg: String) {
-        status.text = msg
-    }
-
     // ---- Fayllarga ruxsat ----
-
-    private fun hasAllFilesAccess(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED
-        }
 
     private fun requestAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -142,8 +134,8 @@ class MainActivity : Activity() {
         } else {
             requestPermissions(
                 arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
                 ), 1
             )
         }
