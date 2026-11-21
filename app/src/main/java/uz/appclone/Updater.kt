@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
  */
 object Updater {
     /** Masalan: "foydalanuvchi/AppClone". O'zingizning repo nomingizga almashtiring. */
-    const val REPO = "OWNER/REPO"
+    const val REPO = "XCoderUzb/AppClone"
 
     private const val CHECK_GAP_MS = 6 * 60 * 60 * 1000L
 
